@@ -1,2 +1,9 @@
 # Markov-study-helper
 A dynamic, coupled Markov Chain engine for Bayesian Knowledge Tracing — when a student masters a prerequisite (e.g. Integration), it live-mutates the transition probabilities of dependent topics (e.g. Differential Equations), visualized in real time as students flow through a curriculum graph.
+Problem: Most adaptive-learning tools treat topics as isolated silos — they don't model how mastering one concept changes your odds of mastering another. A student who's mastered Integration should visibly have an easier time with Differential Equations, but static quiz-based tools never capture that dependency.
+
+Solution: We model each topic as a 3-state Markov Chain (Confused → Practicing → Mastered) following Bayesian Knowledge Tracing. For dependent topics, we built a Coupled Markov Chain: when a prerequisite reaches Mastered, it emits a weighted "boost" that shifts probability mass out of the Confused→Confused cell into Confused→Practicing, and out of Practicing→Practicing into Practicing→Mastered — mathematically loosening the dependent topic's matrix as prerequisites clear.
+
+Why it's rigorous, not just an API wrapper: This approach is grounded in the same principle Markov proved in 1913 by hand-tracking 20,000 letters of Eugene Onegin — that locally dependent, seemingly random events stabilize into predictable long-run laws. We extend that with Stanislaw Ulam's Monte Carlo method (from the Manhattan Project) to simulate thousands of virtual students through a curriculum and surface where bottlenecks will emerge, before a single real student hits them.
+
+Stack: Python/NumPy backend running the stochastic simulation (DependentConcept class handling the dynamic matrix mutation); React + Recharts + Lucide frontend ("mission control" dashboard) rendering live bar/line/pie charts of chapter mastery, weighted against real AP Calculus AB unit weightings, with quiz-driven state transitions per chapter.
