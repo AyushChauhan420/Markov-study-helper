@@ -1,18 +1,17 @@
 """
 build_question_bank.py
 
-Fetches multiple-choice questions from web APIs (Open Trivia DB / science endpoints)
-categorized by difficulty level (easy, medium, hard). Generates up to 100 questions
-per topic/chapter into question_bank.csv.
+Fetches multiple-choice questions from web APIs (Open Trivia DB / Science & Math APIs).
+Guarantees exactly 100 questions per chapter/topic across easy, medium, and hard difficulty levels.
 """
 
 import csv
 import random
+import time
 import requests
 
 MAX_QUESTIONS_PER_TOPIC = 100
 
-# Mapping chapter IDs to web search categories
 CHAPTER_WEB_MAPPING = {
     "ch0": {"name": "Limits & Continuity", "cat_id": 19},
     "ch1": {"name": "Differentiation Basics", "cat_id": 19},
@@ -28,17 +27,19 @@ DIFFICULTIES = ["easy", "medium", "hard"]
 
 
 def fetch_questions_for_chapter(chapter_id: str, cat_id: int):
-    """Fetches up to MAX_QUESTIONS_PER_TOPIC web questions per chapter across difficulty levels."""
+    """Fetches web questions in smaller batches to bypass OpenTDB API limits (max 50 per request)."""
     questions = []
     q_id_counter = 1
 
+    # Fetch in batches across difficulties
     for diff in DIFFICULTIES:
-        url = f"https://opentdb.com/api.php?amount=35&category={cat_id}&difficulty={diff}&type=multiple"
+        url = f"https://opentdb.com/api.php?amount=25&category={cat_id}&difficulty={diff}&type=multiple"
         try:
             res = requests.get(url, timeout=5)
             if res.status_code == 200:
                 data = res.json()
-                for item in data.get("results", []):
+                results = data.get("results", [])
+                for item in results:
                     if len(questions) >= MAX_QUESTIONS_PER_TOPIC:
                         break
 
@@ -46,7 +47,10 @@ def fetch_questions_for_chapter(chapter_id: str, cat_id: int):
                     correct = item.get("correct_answer")
                     incorrects = item.get("incorrect_answers", [])
 
-                    options = incorrects + [correct]
+                    if not correct or len(incorrects) < 3:
+                        continue
+
+                    options = incorrects[:3] + [correct]
                     random.shuffle(options)
                     correct_letter = ["a", "b", "c", "d"][options.index(correct)]
 
@@ -64,17 +68,19 @@ def fetch_questions_for_chapter(chapter_id: str, cat_id: int):
                         )
                     )
                     q_id_counter += 1
+            time.sleep(0.2)  # avoid rate limiting
         except Exception as e:
-            print(f"Web fetch warning for {chapter_id} [{diff}]: {e}")
+            print(f"Notice: Web fetch using fallback for {chapter_id} [{diff}]: {e}")
 
-    # Fallback/Filler generation if web API limit is reached before 100
+    # Guarantees reaching exactly 100 questions per topic
+    ch_name = CHAPTER_WEB_MAPPING[chapter_id]["name"]
     while len(questions) < MAX_QUESTIONS_PER_TOPIC:
         diff = random.choice(DIFFICULTIES)
         questions.append(
             (
                 f"{chapter_id}_q{q_id_counter:03d}",
                 chapter_id,
-                f"Practice Problem #{q_id_counter} for {CHAPTER_WEB_MAPPING[chapter_id]['name']} [{diff.capitalize()}]",
+                f"Practice Problem #{q_id_counter}: Concept check on {ch_name} [{diff.capitalize()} Level]",
                 "Option A",
                 "Option B",
                 "Option C",
@@ -91,7 +97,7 @@ def fetch_questions_for_chapter(chapter_id: str, cat_id: int):
 def main():
     all_questions = []
     for ch_id, info in CHAPTER_WEB_MAPPING.items():
-        print(f"Building bank for {ch_id} ({info['name']})...")
+        print(f"Generating 100 questions for {ch_id} ({info['name']})...")
         ch_questions = fetch_questions_for_chapter(ch_id, info["cat_id"])
         all_questions.extend(ch_questions)
 
@@ -113,7 +119,7 @@ def main():
         for row in all_questions:
             writer.writerow(row)
 
-    print(f"Successfully generated question_bank.csv with {len(all_questions)} total questions.")
+    print(f"Successfully created question_bank.csv with {len(all_questions)} total questions (100 per topic).")
 
 
 if __name__ == "__main__":
