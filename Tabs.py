@@ -220,7 +220,7 @@ def plan_tab(chapters):
 
     # NOTE: this is a placeholder projection curve, not a real simulation.
     # Swap in a real model (e.g. expected-gain-per-problem simulation) later.
-    total_weighted_gap = sum(c["weight_pct"] * (1 - c["mastery") for c in priority) or 1
+    total_weighted_gap = sum(c["weight_pct"] * (1 - c["mastery"]) for c in priority) or 1
     steps = list(range(0, budget + 1, max(5, round(budget / 10))))
     curve_df = pd.DataFrame({
         "budget": steps,
