@@ -1,0 +1,65 @@
+question_id,chapter_id,question,option_a,option_b,option_c,option_d,correct_option,difficulty
+q001,ch0,Evaluate lim(x→2) (x²−4)/(x−2),2,4,0,undefined,b,easy
+q002,ch0,Evaluate lim(x→0) sin(x)/x,0,1,undefined,∞,b,medium
+q003,ch0,Evaluate lim(x→∞) (3x²+2)/(x²+1),0,1,3,∞,c,medium
+q004,ch0,A function f is continuous at x=a if:,f(a) exists only,lim x→a f(x) exists only,f(a) = lim x→a f(x),f is differentiable at a,c,easy
+q005,ch0,Evaluate lim(x→1) (x³−1)/(x−1),1,2,3,undefined,c,medium
+q006,ch0,Which limit is an indeterminate 0/0 form?,lim x→0 x/1,lim x→0 sin(x)/x,lim x→5 (x+1),lim x→2 (x−2)/(x+2),b,medium
+q007,ch0,Evaluate lim(x→0⁺) 1/x,0,1,∞,−∞,c,easy
+q008,ch0,The Intermediate Value Theorem requires the function to be:,"Differentiable on [a,b]","Continuous on [a,b]","Increasing on [a,b]","Bounded on [a,b]",b,easy
+q009,ch1,Find d/dx[5x⁴ − 3x² + 7],20x³−6x,20x³−3x,5x³−6x,20x⁴−6x,a,easy
+q010,ch1,Find d/dx[x⁵],x⁴,5x⁴,5x⁵,x⁵/5,b,easy
+q011,ch1,Find d/dx[7],7,0,1,x,b,easy
+q012,ch1,Find d/dx[3x^(1/2)],3/2 √x,3/(2√x),3√x,3/2 x^(3/2),b,medium
+q013,ch1,Find d/dx[1/x²],−2/x³,2/x³,−1/x³,1/x³,a,medium
+q014,ch1,The derivative of a sum f(x)+g(x) is:,f'(x)·g'(x),f'(x)+g'(x),f'(x)−g'(x),always 0,b,easy
+q015,ch1,Find d/dx[10x² − 4x + 1],20x−4,10x−4,20x+4,10x²−4,a,easy
+q016,ch1,The power rule states d/dx[x^n] =,nx^(n−1),x^(n−1),nx^n,(n−1)x^n,a,easy
+q017,ch2,Find d/dx[(2x+5)⁴],4(2x+5)³,8(2x+5)³,8(2x+5)⁴,2(2x+5)³,b,medium
+q018,ch2,Find d/dx[sin(3x)],cos(3x),3cos(3x),−3cos(3x),3sin(3x),b,medium
+q019,ch2,Find d/dx[e^(2x)],e^(2x),2e^(2x),2xe^(2x),e^(2x)/2,b,medium
+q020,ch2,Find d/dx[ln(x²+1)],1/(x²+1),2x/(x²+1),2x,x/(x²+1),b,medium
+q021,ch2,"For x²+y²=25, find dy/dx implicitly",x/y,−x/y,−y/x,y/x,b,hard
+q022,ch2,Find d/dx[cos(x²)],−2x sin(x²),2x sin(x²),−sin(x²),−2x cos(x²),a,medium
+q023,ch2,The chain rule states d/dx[f(g(x))] =,f'(g(x)),f'(g(x))·g'(x),f'(x)·g'(x),f(g'(x)),b,easy
+q024,ch2,"For xy=10, find dy/dx implicitly",y/x,−y/x,−x/y,x/y,b,hard
+q025,ch3,A sphere's radius grows at 3 cm/s. Find dV/dt at r=2 (V=⁴⁄₃πr³),16π cm³/s,48π cm³/s,32π cm³/s,24π cm³/s,b,hard
+q026,ch3,s(t)=t³−6t²+9t. Find velocity at t=2,−3,3,0,9,a,medium
+q027,ch3,s(t)=t²−4t. Find when velocity=0,t=1,t=2,t=4,t=0,b,easy
+q028,ch3,s(t)=t²+3t (meters). Find acceleration,2 m/s²,3 m/s²,t m/s²,0 m/s²,a,easy
+q029,ch3,"A 10 ft ladder's base slides away at 1 ft/s. When the base is 6 ft out, how fast does the top slide down?",−0.75 ft/s,−1 ft/s,0.75 ft/s,−1.33 ft/s,a,hard
+q030,ch3,Marginal cost is defined as:,Total cost ÷ quantity,The derivative of the cost function,The integral of the cost function,Average cost,b,easy
+q031,ch3,f(x)=x³ models population. Find the growth rate at x=2,6,8,12,4,c,medium
+q032,ch3,A balloon's radius grows at 0.5 cm/s. Find dSA/dt at r=4 (SA=4πr²),8π,16π,4π,32π,b,hard
+q033,ch4,"For f(x)=x³−3x, find the critical points",x=0,x=±1,x=±3,x=1 only,b,medium
+q034,ch4,"For f(x)=x³−3x, the local minimum is at",x=−1,x=0,x=1,x=3,c,medium
+q035,ch4,"If f''(x)>0 on an interval, the graph is",Concave down,Concave up,Increasing,Decreasing,b,easy
+q036,ch4,An inflection point occurs where,f'(x)=0,f''(x)=0 and concavity changes,f(x)=0,f'(x) is undefined only,b,medium
+q037,ch4,"For f(x)=x²−4x+3, the minimum occurs at",x=1,x=2,x=3,x=4,b,easy
+q038,ch4,"If f'(x)>0 for all x in an interval, f is",Decreasing,Constant,Increasing,Concave up,c,easy
+q039,ch4,"For f(x)=x⁴−4x², find the x-values of the local minima",x=0,x=±√2,x=±2,x=±1,b,hard
+q040,ch4,The First Derivative Test is used to determine,Concavity,Local extrema,Points of inflection only,Continuity,b,easy
+q041,ch5,Evaluate ∫ 3x² dx,x³+C,3x³+C,x³/3+C,6x+C,a,easy
+q042,ch5,Evaluate ∫₀² 3x² dx,6,8,12,4,b,medium
+q043,ch5,Evaluate ∫ (1/x) dx,ln|x|+C,1/x²+C,x ln x − x + C,−1/x²+C,a,medium
+q044,ch5,Evaluate ∫ e^(2x) dx,e^(2x)+C,2e^(2x)+C,(1/2)e^(2x)+C,(1/2)e^x+C,c,medium
+q045,ch5,Evaluate ∫ cos(x) dx,sin(x)+C,−sin(x)+C,cos(x)+C,−cos(x)+C,a,easy
+q046,ch5,"Using u=x²+1, evaluate ∫ 2x(x²+1)³ dx",(x²+1)⁴+C,(x²+1)⁴/4+C,4(x²+1)³+C,(x²+1)³/3+C,b,hard
+q047,ch5,Evaluate ∫₁³ 2x dx,6,8,9,4,b,medium
+q048,ch5,The integration by parts formula is,∫u dv = uv − ∫v du,∫u dv = uv + ∫v du,∫u dv = u'v − uv',∫u dv = ∫u du · ∫v dv,a,hard
+q049,ch6,"Solve dy/dx = y, y(0)=2. Find y(1)",e²,2/e,2e²,2e,d,medium
+q050,ch6,"Solve dy/dx = 3, y(0)=1. Find y(x)",y=3x,y=3x+1,y=x+3,y=3x−1,b,easy
+q051,ch6,Which of these is a separable differential equation?,dy/dx = x + y,dy/dx = x·y,dy/dx = sin(x+y),dy/dx = x²+y²,b,medium
+q052,ch6,"Solve dy/dx = 2x, y(0)=5. Find y(x)",y=x²,y=x²+5,y=2x²+5,y=x²−5,b,easy
+q053,ch6,The general solution to dy/dx = ky is,y=kx+C,y=Ce^(kx),y=Cx^k,y=k ln(x)+C,b,medium
+q054,ch6,"For dy/dx = −0.5y, y(0)=100, this models",Exponential growth,Exponential decay,Linear decay,Logistic growth,b,easy
+q055,ch6,"Solve dy/dx = 4x³, y(1)=2. Find y(x)",y=x⁴+1,y=x⁴,y=x⁴−1,y=4x⁴+1,a,medium
+q056,ch6,An initial condition in a differential equation is used to,Find the general solution,Find a particular solution by solving for C,Determine the order of the equation,Check if the equation is linear,b,medium
+q057,ch7,"Area between y=x² and y=4, from x=−2 to x=2",16/3,8/3,64/3,32/3,d,hard
+q058,ch7,Find the area under y=x² from x=0 to x=3,6,9,27,3,b,medium
+q059,ch7,The area between f(x) and g(x) (f≥g) from a to b is,∫ₐᵇ [f(x)+g(x)] dx,∫ₐᵇ [f(x)−g(x)] dx,f(b)−g(b),∫ₐᵇ f(x)·g(x) dx,b,easy
+q060,ch7,"Revolve y=x, 0≤x≤2, around the x-axis. Find the volume (disk method)",8π/3,4π,2π,16π/3,a,hard
+q061,ch7,Find the area between y=x and y=x² from x=0 to x=1,1/6,1/3,1/2,5/6,a,medium
+q062,ch7,"The average value of f(x) on [a,b] is",(1/(b−a)) ∫ₐᵇ f(x) dx,∫ₐᵇ f(x) dx,f(b)−f(a),(f(a)+f(b))/2,a,medium
+q063,ch7,Find the area under y=3x² from x=1 to x=2,6,7,8,9,b,medium
+q064,ch7,The disk-method volume of revolution around the x-axis for f(x) from a to b is,π∫ₐᵇ f(x) dx,π∫ₐᵇ [f(x)]² dx,2π∫ₐᵇ f(x) dx,∫ₐᵇ [f(x)]² dx,b,medium
