@@ -54,25 +54,7 @@ least WCAG AA contrast against their background:
 | Nordic Frost | Cool blue-gray, crisp and quiet |
 | Sunset Pop | Cream base, punchy magenta & gold accents |
 
-## How to customize things later
 
-**Add or edit a color palette** → edit the `PALETTES` dict in
-`theme.py` and it appears in the sidebar automatically. Every
-component reads from the live `COLORS` dict, so no other file needs
-to change.
-
-**Change fonts** → edit `FONT_DISPLAY` / `FONT_BODY` / `FONT_MONO` in
-`theme.py` (update the Google Fonts `@import` URL too if you pick
-different font families).
-
-**Add another tab** → write a `your_tab(chapters)` function in
-`tabs.py`, then wire it into the `st.tabs([...])` call and the
-`with tab_x:` block in `app.py`.
-
-**Replace the mock data with real data** → edit `data.py`. Keep the
-same shape:
-```python
-{"id": "ch0", "name": "...", "weight_pct": 11, "mastery": 0.62}
 ```
 `get_default_chapters()` can be swapped to load from a database, an
 API, or an uploaded file — nothing else in the project needs to
