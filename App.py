@@ -18,9 +18,7 @@ from Tabs import overview_tab, weighting_tab, checkin_tab, plan_tab
 st.set_page_config(page_title="Study Planner", page_icon="📓", layout="wide")
 inject_global_css()
 
-# ---------------------------------------------------------------------
 # Session state
-# ---------------------------------------------------------------------
 if "chapters" not in st.session_state:
     st.session_state.chapters = get_default_chapters()
 
@@ -55,9 +53,7 @@ def reset_all():
     st.session_state.checkin_chapter_id = fresh_chapters[0]["id"]
 
 
-# ---------------------------------------------------------------------
 # Header
-# ---------------------------------------------------------------------
 with st.container():
     col_title, col_reset = st.columns([5, 1])
     with col_title:
@@ -75,9 +71,7 @@ with st.container():
             reset_all()
             st.rerun()
 
-# ---------------------------------------------------------------------
 # Tabs
-# ---------------------------------------------------------------------
 tab_overview, tab_weighting, tab_checkin, tab_plan = st.tabs(
     ["Overview", "Weighting", "Check-in", "Plan"]
 )
