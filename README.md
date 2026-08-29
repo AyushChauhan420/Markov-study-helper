@@ -1,9 +1,52 @@
-# Markov-study-helper
-A dynamic, coupled Markov Chain engine for Bayesian Knowledge Tracing — when a student masters a prerequisite (e.g. Integration), it live-mutates the transition probabilities of dependent topics (e.g. Differential Equations), visualized in real time as students flow through a curriculum graph.
-Problem: Most adaptive-learning tools treat topics as isolated silos — they don't model how mastering one concept changes your odds of mastering another. A student who's mastered Integration should visibly have an easier time with Differential Equations, but static quiz-based tools never capture that dependency.
+# Study Planner
 
-Solution: We model each topic as a 3-state Markov Chain (Confused → Practicing → Mastered) following Bayesian Knowledge Tracing. For dependent topics, we built a Coupled Markov Chain: when a prerequisite reaches Mastered, it emits a weighted "boost" that shifts probability mass out of the Confused→Confused cell into Confused→Practicing, and out of Practicing→Practicing into Practicing→Mastered — mathematically loosening the dependent topic's matrix as prerequisites clear.
+A Streamlit prototype for an exam-readiness / study-priority tool,
+styled with a warm "study desk" look (paper background, highlighter
+accents) instead of a generic dark dashboard.
 
-Why it's rigorous, not just an API wrapper: This approach is grounded in the same principle Markov proved in 1913 by hand-tracking 20,000 letters of Eugene Onegin — that locally dependent, seemingly random events stabilize into predictable long-run laws. We extend that with Stanislaw Ulam's Monte Carlo method (from the Manhattan Project) to simulate thousands of virtual students through a curriculum and surface where bottlenecks will emerge, before a single real student hits them.
+## Run it
 
-Stack: Python/NumPy backend running the stochastic simulation (DependentConcept class handling the dynamic matrix mutation); React + Recharts + Lucide frontend ("mission control" dashboard) rendering live bar/line/pie charts of chapter mastery, weighted against real AP Calculus AB unit weightings, with quiz-driven state transitions per chapter.
+```bash
+pip install -r requirements.txt
+python -m streamlit run app.py
+```
+
+Opens at `http://localhost:8501`.
+
+## Project layout
+
+```
+study_planner/
+├── app.py          entry point — page setup, session state, tab routing
+├── theme.py         ← change COLORS / fonts here to restyle the whole app
+├── data.py           ← change mock chapters/quiz here to update content
+├── components.py     reusable UI pieces (cards, pills, progress bars)
+├── tabs.py           the 4 tab views (Overview, Weighting, Check-in, Plan)
+└── requirements.txt
+```
+
+## How to customize things later
+
+**Change the color scheme** → edit the `COLORS` dict in `theme.py`.
+Every component reads from there, so one edit restyles the whole app.
+
+**Change fonts** → edit `FONT_DISPLAY` / `FONT_BODY` / `FONT_MONO` in
+`theme.py` (update the Google Fonts `@import` URL too if you pick
+different font families).
+
+**Replace the mock data with real data** → edit `data.py`. Keep the
+same shape:
+```python
+{"id": "ch0", "name": "...", "weight_pct": 11, "mastery": 0.62}
+```
+`get_default_chapters()` can be swapped to load from a database, an
+API, or an uploaded file — nothing else in the project needs to
+change as long as the shape stays the same.
+
+**Add more quiz questions** → add entries to `QUIZ_BANK` in
+`data.py`, keyed by chapter id. Chapters without a quiz entry just
+show the self-rating step only.
+
+**Known placeholder**: the "Projected score vs. problems solved"
+chart on the Plan tab uses a mock curve, not a real simulation —
+see the `NOTE` comment above it in `tabs.py`.
