@@ -14,11 +14,6 @@ verified rather than pulled from an unrelated trivia API.
 import random
 import csv
 from fractions import Fraction
-
-# ---------------------------------------------------------------------
-# Formatting helpers -- house style matches the app's existing plain-text
-# math notation (unicode superscripts, e.g. "x\u00b2", "(3x+1)\u2075").
-# ---------------------------------------------------------------------
 import random
 import sympy as sp
 
@@ -96,10 +91,7 @@ def poly_terms_to_sympy(terms, x):
     return sum(c * x**p for c, p in terms)
 
 
-# ---------------------------------------------------------------------
-# ch0_limits
-# ---------------------------------------------------------------------
-
+#limits
 def ch0_easy():
     # direct substitution into a polynomial limit
     a = random.randint(-4, 4)
@@ -190,10 +182,7 @@ def ch0_hard():
         opts = [correct] + list(wrongs)
         return q_txt, opts, correct, "hard"
 
-
-# ---------------------------------------------------------------------
 # ch1_diff_basics
-# ---------------------------------------------------------------------
 
 def _poly_and_deriv(n_terms=3, max_pow=4):
     powers = random.sample(range(1, max_pow+1), min(n_terms, max_pow))
