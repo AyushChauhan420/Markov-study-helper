@@ -1,6 +1,6 @@
 """
-tabs.py — updated tab views allowing up to 100 practice questions per topic
-and real-time Markov model state evaluation based on selected difficulty.
+tabs.py — individual tab view logic including Overview, Weighting, Check-In (up to 100 questions),
+and Plan tabs, integrated with the real-time Markov chain standing tracker.
 """
 
 import numpy as np
@@ -47,11 +47,11 @@ def calculate_markov_standings(completed: int, total_requested: int, difficulty:
     weight = diff_weights.get(difficulty.lower(), 1.0)
     adjusted_performance = min(1.0, accuracy * weight)
 
-    # Initial state vector v0
+    # Initial probability vector v0 based on chapter mastery
     v0 = np.array([max(0.0, 1.0 - current_mastery), current_mastery * 0.5, current_mastery * 0.5])
     v0 = v0 / np.sum(v0)
 
-    # Transition probability matrix (P)
+    # Transition probability matrix (P) based on test performance
     if adjusted_performance >= 0.75:
         P = np.array([[0.1, 0.3, 0.6], [0.05, 0.25, 0.70], [0.0, 0.1, 0.9]])
     elif adjusted_performance >= 0.4:
@@ -59,7 +59,7 @@ def calculate_markov_standings(completed: int, total_requested: int, difficulty:
     else:
         P = np.array([[0.7, 0.2, 0.1], [0.40, 0.50, 0.10], [0.20, 0.50, 0.30]])
 
-    # 3-step Markov chain state transition projection
+    # 3-step forecast matrix multiplication
     v_future = v0 @ np.linalg.matrix_power(P, 3)
     states = ["Confused", "Practicing", "Mastered"]
     current_state = states[int(np.argmax(v_future))]
@@ -185,7 +185,7 @@ def weighting_tab(chapters):
 
 
 # ---------------------------------------------------------------------
-# CHECK-IN TAB (MAX 100 QUESTIONS SUPPORT)
+# CHECK-IN TAB
 # ---------------------------------------------------------------------
 def checkin_tab(chapters):
     chapter_by_id = {c["id"]: c for c in chapters}
@@ -214,21 +214,25 @@ def checkin_tab(chapters):
             "Difficulty Level", ["Mixed", "Easy", "Medium", "Hard"], key="checkin_diff_select"
         )
 
+    # Filter questions matching selected difficulty
     if difficulty_filter != "Mixed":
         filtered_questions = [
             q for q in all_questions if str(q.get("difficulty", "")).lower() == difficulty_filter.lower()
         ]
+        if len(filtered_questions) < len(all_questions):
+            remaining = [q for q in all_questions if q not in filtered_questions]
+            filtered_questions.extend(remaining)
     else:
         filtered_questions = all_questions
 
-    available_total = min(len(filtered_questions), 100)
+    available_total = max(1, min(len(filtered_questions), 100))
 
     with col_count:
         num_questions = st.number_input(
-            f"No. of Questions (Max 100)",
-            min_value=1 if available_total > 0 else 0,
-            max_value=max(1, available_total),
-            value=min(10, available_total) if available_total > 0 else 0,
+            f"No. of Questions (Max {available_total})",
+            min_value=1,
+            max_value=available_total,
+            value=min(10, available_total),
             step=1,
             key="checkin_num_questions",
         )
@@ -242,12 +246,8 @@ def checkin_tab(chapters):
     c = chapter_by_id[selected_id]
     hue = CHAPTER_HUES[ids.index(selected_id) % len(CHAPTER_HUES)]
     chapter_dot_label(
-        c["name"], hue, suffix=f" · {available_total} available questions for {difficulty_filter} difficulty"
+        c["name"], hue, suffix=f" · {available_total} total questions available"
     )
-
-    if available_total == 0:
-        st.info("No questions found matching your criteria. Try switching difficulty levels.")
-        return
 
     active_questions = filtered_questions[: int(num_questions)]
 
