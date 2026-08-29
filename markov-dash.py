@@ -16,7 +16,9 @@ import time
 import streamlit as st
 import plotly.graph_objects as go
 
+# ----------------------------------------------------------------------
 # CONFIG
+# ----------------------------------------------------------------------
 STATES = ["Confused", "Practicing", "Mastered"]
 COLORS = ["#FF4B4B", "#FFB020", "#2ECC71"]   # red -> amber -> green
 BG_COLOR = "#0E1117"
@@ -67,7 +69,12 @@ def render_state_chart(probabilities: list[float], key: str = "state_chart", tit
     )
 
     st.plotly_chart(fig, use_container_width=True, key=key)
-    
+
+
+# ----------------------------------------------------------------------
+# STANDALONE DEMO
+# (safe to delete this section once you wire in your team's real data)
+# ----------------------------------------------------------------------
 if __name__ == "__main__":
     st.title("🧠 Prerequisite Mastery Tracker")
     st.caption("Live demo — replace `demo_probabilities` with your Markov chain output.")
@@ -91,3 +98,46 @@ if __name__ == "__main__":
         st.session_state.demo_probabilities = [0.7, 0.2, 0.1]
         st.rerun()
 
+
+# ----------------------------------------------------------------------
+# INTEGRATION GUIDE — how to plug this into your team's main app
+# ----------------------------------------------------------------------
+#
+# 1. Save this file as `markov_dashboard.py` in your project folder,
+#    alongside your team's main Streamlit app file (e.g. `app.py`).
+#
+# 2. In your team's main app.py, import the render function instead of
+#    running this file directly:
+#
+#       from markov_dashboard import render_state_chart
+#
+# 3. Wherever your teammates' backend produces the probability array
+#    (e.g. `probs = markov_model.get_state_probs(topic="integration")`),
+#    just call:
+#
+#       render_state_chart(probs, key="integration_chart", title="Integration")
+#
+#    - `probs` must be a list/array of 3 floats: [Confused, Practicing, Mastered]
+#    - `key` must be UNIQUE per chart if you show multiple prerequisites
+#      on one page (e.g. "integration_chart", "differentiation_chart", ...)
+#      Streamlit will throw a duplicate-element error otherwise.
+#
+# 4. For the chart to visibly ANIMATE when state changes:
+#    - Store the probability array in `st.session_state` (see demo above)
+#    - After updating it (e.g. after a student answers a diagnostic question
+#      or solves a practice problem), call `st.rerun()`
+#    - Plotly's `transition` config (already set in this file) will smoothly
+#      animate the bars from old height -> new height instead of snapping.
+#
+# 5. For MULTIPLE prerequisites on one dashboard (e.g. Integration,
+#    Differentiation, Limits all feeding into Diff Eq), just loop:
+#
+#       for topic_name, probs in backend_results.items():
+#           render_state_chart(probs, key=f"{topic_name}_chart", title=topic_name)
+#
+# 6. If your backend pushes updates asynchronously (e.g. via a queue or
+#    websocket rather than a button click), wrap the chart render in a
+#    `st.empty()` placeholder and update it in a loop with `time.sleep()`
+#    between polls — ask if you want that pattern added too.
+#
+# ----------------------------------------------------------------------

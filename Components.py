@@ -22,9 +22,12 @@ def eyebrow(text: str):
 
 
 def highlight_span(text: str, color: str = None) -> str:
-    """Returns an inline HTML span styled like a highlighter stroke.
+    """Returns an inline HTML span styled like a highlighter stroke, tuned
+    per-palette (color defaults to COLORS['highlight_bg']) so the ink-
+    colored text sitting on top always stays readable — bright stripes on
+    light palettes, a dark warm stripe on Midnight.
     Use inside an f-string passed to st.markdown(..., unsafe_allow_html=True)."""
-    color = color or COLORS["yellow_hi"]
+    color = color or COLORS["highlight_bg"]
     return (
         f"<span style='background: linear-gradient(180deg, transparent 58%, "
         f"{color} 58%, {color} 88%, transparent 88%); padding: 0 2px;'>{text}</span>"
@@ -46,12 +49,13 @@ def status_pill(mastery: float):
 
 
 def progress_bar(value: float, color: str):
-    """Renders a slim colored progress bar (0..1)."""
+    """Renders a slim colored progress bar (0..1). Width animates smoothly
+    so score updates (e.g. after a quiz) feel snappy rather than jumping."""
     value = max(0.0, min(1.0, value))
     st.markdown(
         f"<div style='height:6px; background:{COLORS['paper_line']}; border-radius:4px; "
         f"overflow:hidden;'><div style='width:{value*100:.1f}%; height:100%; "
-        f"background:{color};'></div></div>",
+        f"background:{color}; transition:width 450ms ease;'></div></div>",
         unsafe_allow_html=True,
     )
 
@@ -67,7 +71,7 @@ def section_title(text: str):
 def chapter_dot_label(name: str, color: str, suffix: str = ""):
     """Small colored dot + chapter name. Used to visually tie a chapter to
     its color elsewhere in the app (e.g. its pie-chart slice), the same way
-    the Overview tab's chapter breakdown already does."""
+    the Chapters tab's breakdown already does."""
     st.markdown(
         f"<div style='display:flex; align-items:center; gap:8px; margin-bottom:2px;'>"
         f"<span style='width:9px; height:9px; border-radius:50%; background:{color}; "
@@ -82,5 +86,32 @@ def eyebrow_page_label(text: str):
     st.markdown(
         f"<div style='font-family:{FONT_MONO}; font-size:11px; color:{COLORS['ballpoint']}; "
         f"letter-spacing:0.1em; text-transform:uppercase; margin-bottom:6px;'>{text}</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def stat_chip_row(counts: dict):
+    """Renders a row of three compact chips summarizing chapter counts by
+    status bucket: {"Solid": n, "Practicing": n, "Needs work": n}. Built
+    for the trimmed-down Overview tab — a glance-able summary that doesn't
+    require reading a full chapter-by-chapter list (that lives in the
+    Chapters tab)."""
+    bucket_colors = {
+        "Solid": COLORS["mint"],
+        "Practicing": COLORS["amber"],
+        "Needs work": COLORS["coral"],
+    }
+    chips = "".join(
+        f"<div style='flex:1; text-align:center; padding:12px 8px; border-radius:12px; "
+        f"background:{bucket_colors[label]}14; border:1px solid {bucket_colors[label]}33;'>"
+        f"<div style='font-family:{FONT_DISPLAY}; font-size:24px; font-weight:700; "
+        f"color:{bucket_colors[label]};'>{counts.get(label, 0)}</div>"
+        f"<div style='font-family:{FONT_MONO}; font-size:10.5px; text-transform:uppercase; "
+        f"letter-spacing:0.06em; color:{COLORS['ink_muted']}; margin-top:2px;'>{label}</div>"
+        f"</div>"
+        for label in ("Solid", "Practicing", "Needs work")
+    )
+    st.markdown(
+        f"<div style='display:flex; gap:10px;'>{chips}</div>",
         unsafe_allow_html=True,
     )

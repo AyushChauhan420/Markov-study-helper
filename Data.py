@@ -36,7 +36,15 @@ def get_default_chapters():
     ]
 
 
-
+# ---------------------------------------------------------------------
+# Question bank -- loaded from question_bank.csv (see build_question_bank.py),
+# grouped by chapter id: {"ch0": [{"id", "question", "options", "correct_index",
+# "difficulty"}, ...], ...}
+#
+# Falls back to one built-in question per chapter if the CSV isn't sitting
+# next to app.py yet, so the Check-in tab never crashes -- run
+# `python build_question_bank.py` to generate the real 64-question bank.
+# ---------------------------------------------------------------------
 QUESTION_BANK_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "question_bank.csv")
 
 _FALLBACK_BANK = {

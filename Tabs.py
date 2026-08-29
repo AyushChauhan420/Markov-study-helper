@@ -1,6 +1,15 @@
 """
-tabs.py — individual tab view logic including Overview, Weighting, Check-In (up to 100 questions),
-and Plan tabs, integrated with the real-time Markov chain standing tracker.
+tabs.py — individual tab view logic: Overview, Chapters, Weighting,
+Check-In (up to 100 questions), and Plan, integrated with the
+real-time Markov chain standing tracker.
+
+Overview vs. Chapters
+----------------------
+Overview used to carry the readiness score AND the full chapter-by-
+chapter breakdown in one tab, which made a first visit overwhelming.
+It now shows only the two numbers a student needs first (overall
+readiness, biggest opportunity) plus a three-chip status summary.
+The full sortable breakdown lives in its own Chapters tab.
 """
 
 import numpy as np
@@ -13,10 +22,11 @@ from Components import (
     eyebrow,
     highlight_span,
     progress_bar,
+    stat_chip_row,
     status_pill,
 )
 from Data import QUESTION_BANK, SOURCE_LABEL
-from Theme import CHAPTER_HUES, COLORS, FONT_BODY, FONT_DISPLAY, FONT_MONO
+from Theme import CHAPTER_HUES, COLORS, FONT_BODY, FONT_DISPLAY, FONT_MONO, bucket_of
 
 
 def _plotly_base_layout(height=280):
@@ -68,7 +78,7 @@ def calculate_markov_standings(completed: int, total_requested: int, difficulty:
 
 
 # ---------------------------------------------------------------------
-# OVERVIEW TAB
+# OVERVIEW TAB — headline numbers only
 # ---------------------------------------------------------------------
 def overview_tab(chapters):
     total_w = sum(c["weight_pct"] for c in chapters) or 1
@@ -78,7 +88,7 @@ def overview_tab(chapters):
     col1, col2 = st.columns([1.1, 1])
 
     with col1:
-        with st.container():
+        with st.container(border=True):
             eyebrow("Where you stand")
             st.markdown(
                 f"<div style='font-family:{FONT_DISPLAY}; font-size:15px; "
@@ -99,7 +109,7 @@ def overview_tab(chapters):
             )
 
     with col2:
-        with st.container():
+        with st.container(border=True):
             eyebrow("Biggest opportunity")
             st.markdown(
                 f"<div style='font-family:{FONT_DISPLAY}; font-size:20px; font-weight:600; "
@@ -116,7 +126,26 @@ def overview_tab(chapters):
                 unsafe_allow_html=True,
             )
 
-    with st.container():
+    with st.container(border=True):
+        eyebrow("At a glance")
+        counts = {"Solid": 0, "Practicing": 0, "Needs work": 0}
+        for c in chapters:
+            label, _ = bucket_of(c["mastery"])
+            counts[label] += 1
+        stat_chip_row(counts)
+        st.markdown(
+            f"<div style='font-family:{FONT_MONO}; font-size:11px; color:{COLORS['ink_muted']}; "
+            f"margin-top:10px;'>Full chapter-by-chapter breakdown lives in the "
+            f"<strong style='color:{COLORS['ink']}'>Chapters</strong> tab.</div>",
+            unsafe_allow_html=True,
+        )
+
+
+# ---------------------------------------------------------------------
+# CHAPTERS TAB — the full breakdown (moved out of Overview)
+# ---------------------------------------------------------------------
+def chapters_tab(chapters):
+    with st.container(border=True):
         eyebrow("Chapter breakdown")
         sorted_chapters = sorted(chapters, key=lambda c: -c["weight_pct"])
         for i, c in enumerate(sorted_chapters):
@@ -127,7 +156,7 @@ def overview_tab(chapters):
                     f"<span style='font-family:{FONT_BODY}; font-size:13.5px; font-weight:500; "
                     f"color:{COLORS['ink']};'>{c['name']}</span>"
                     f"<span style='font-family:{FONT_MONO}; font-size:11px; color:{COLORS['ink_muted']};'>"
-                    f"{c['weight_pct']}% of exam</span></div>",
+                    f"{c['weight_pct']}% of exam · {c['mastery']*100:.0f}% mastered</span></div>",
                     unsafe_allow_html=True,
                 )
                 progress_bar(c["mastery"], CHAPTER_HUES[i % len(CHAPTER_HUES)])
@@ -144,7 +173,7 @@ def weighting_tab(chapters):
     col1, col2 = st.columns([1.1, 1])
 
     with col1:
-        with st.container():
+        with st.container(border=True):
             eyebrow("Adjust chapter weighting")
             st.markdown(
                 f"<div style='font-family:{FONT_BODY}; font-size:12.5px; "
@@ -169,7 +198,7 @@ def weighting_tab(chapters):
                 c["weight_pct"] = new_w
 
     with col2:
-        with st.container():
+        with st.container(border=True):
             eyebrow("Exam weight distribution")
             fig = go.Figure(
                 go.Pie(
@@ -259,7 +288,7 @@ def checkin_tab(chapters):
 
     for idx, q in enumerate(active_questions):
         qid = q["id"]
-        with st.container():
+        with st.container(border=True):
             st.markdown(
                 f"<div style='font-family:{FONT_BODY}; font-size:13.5px; margin-bottom:6px; color:{COLORS['ink']};'>"
                 f"<strong>Q{idx+1} [{q.get('difficulty', 'medium').capitalize()}]</strong> {q['question']}</div>",
@@ -328,7 +357,7 @@ def checkin_tab(chapters):
 # PLAN TAB
 # ---------------------------------------------------------------------
 def plan_tab(chapters):
-    with st.container():
+    with st.container(border=True):
         eyebrow("Study budget")
         budget = st.slider(
             "Problems you can realistically get through", 10, 200, 60, step=5, key="study_budget"
@@ -336,7 +365,7 @@ def plan_tab(chapters):
 
     priority = sorted(chapters, key=lambda c: -(c["weight_pct"] * (1 - c["mastery"])))
 
-    with st.container():
+    with st.container(border=True):
         eyebrow("Study this, in this order")
         for i, c in enumerate(priority):
             prefix = "🔥 " if i == 0 else f"{i+1}. "
@@ -370,7 +399,7 @@ def plan_tab(chapters):
 
     col1, col2 = st.columns([1.3, 1])
     with col1:
-        with st.container():
+        with st.container(border=True):
             eyebrow("Projected score vs. problems solved")
             fig = go.Figure()
             fig.add_trace(
@@ -400,7 +429,7 @@ def plan_tab(chapters):
             st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        with st.container():
+        with st.container(border=True):
             eyebrow("Problems per chapter")
             fig2 = go.Figure(
                 go.Bar(

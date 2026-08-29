@@ -1,8 +1,9 @@
 # Study Planner
 
-A Streamlit prototype for an exam-readiness / study-priority tool,
-styled with a warm "study desk" look (paper background, highlighter
-accents) instead of a generic dark dashboard.
+A Streamlit prototype for an exam-readiness / study-priority tool.
+Five focused tabs (Overview, Chapters, Weighting, Check-in, Plan) keep
+each screen to one job, and a sidebar lets you swap between six
+accessibility-checked color palettes on the fly.
 
 ## Run it
 
@@ -17,22 +18,56 @@ Opens at `http://localhost:8501`.
 
 ```
 study_planner/
-├── app.py          entry point — page setup, session state, tab routing
-├── theme.py         ← change COLORS / fonts here to restyle the whole app
+├── app.py          entry point — palette activation, session state, tab routing, sidebar
+├── theme.py         ← palettes, fonts, and global CSS live here
 ├── data.py           ← change mock chapters/quiz here to update content
-├── components.py     reusable UI pieces (cards, pills, progress bars)
-├── tabs.py           the 4 tab views (Overview, Weighting, Check-in, Plan)
+├── components.py     reusable UI pieces (cards, pills, progress bars, stat chips)
+├── tabs.py           the 5 tab views (Overview, Chapters, Weighting, Check-in, Plan)
 └── requirements.txt
 ```
 
+## Tabs
+
+- **Overview** — only the headline numbers: overall readiness score,
+  biggest opportunity chapter, and a 3-chip status summary (Solid /
+  Practicing / Needs work). Deliberately minimal for a first-time user.
+- **Chapters** — the full chapter-by-chapter breakdown (progress bars,
+  mastery %, exam weight) that used to live in Overview.
+- **Weighting** — adjust how much each chapter counts toward the exam.
+- **Check-in** — take a practice set per chapter; updates mastery and
+  shows the Markov-chain standing forecast.
+- **Plan** — priority order and a suggested problems-per-chapter split
+  for a given study budget.
+
+## Color palettes
+
+Pick a palette from the sidebar — it applies everywhere instantly (no
+reload). All six are tuned so body text and status colors hold at
+least WCAG AA contrast against their background:
+
+| Palette | Feel |
+|---|---|
+| Study Desk | Warm paper & ink, highlighter accents (default) |
+| Slate Minimal | Cool neutral gray, indigo accent — modern SaaS |
+| Midnight | Dark mode — soft blue glow on near-black |
+| Sage & Clay | Earthy sage & terracotta, soft and calm |
+| Nordic Frost | Cool blue-gray, crisp and quiet |
+| Sunset Pop | Cream base, punchy magenta & gold accents |
+
 ## How to customize things later
 
-**Change the color scheme** → edit the `COLORS` dict in `theme.py`.
-Every component reads from there, so one edit restyles the whole app.
+**Add or edit a color palette** → edit the `PALETTES` dict in
+`theme.py` and it appears in the sidebar automatically. Every
+component reads from the live `COLORS` dict, so no other file needs
+to change.
 
 **Change fonts** → edit `FONT_DISPLAY` / `FONT_BODY` / `FONT_MONO` in
 `theme.py` (update the Google Fonts `@import` URL too if you pick
 different font families).
+
+**Add another tab** → write a `your_tab(chapters)` function in
+`tabs.py`, then wire it into the `st.tabs([...])` call and the
+`with tab_x:` block in `app.py`.
 
 **Replace the mock data with real data** → edit `data.py`. Keep the
 same shape:
