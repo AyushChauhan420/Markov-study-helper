@@ -8,7 +8,7 @@ looks identical and only needs to change in one place.
 """
 
 import streamlit as st
-from theme import COLORS, FONT_DISPLAY, FONT_BODY, FONT_MONO, bucket_of
+from Theme import COLORS, FONT_DISPLAY, FONT_BODY, FONT_MONO, bucket_of
 
 
 def eyebrow(text: str):
