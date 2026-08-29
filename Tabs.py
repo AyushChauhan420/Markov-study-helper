@@ -1,9 +1,8 @@
 """
-tabs.py — individual tab view logic including updated Check-In tab,
-difficulty filtering, realistic question allocation, and real-time Markov standing evaluation.
+tabs.py — updated tab views allowing up to 100 practice questions per topic
+and real-time Markov model state evaluation based on selected difficulty.
 """
 
-import math
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -43,17 +42,16 @@ def calculate_markov_standings(completed: int, total_requested: int, difficulty:
         return "Practicing", [0.2, 0.6, 0.2]
 
     accuracy = completed / float(total_requested)
-    
-    # Difficulty adjustment multiplier
+
     diff_weights = {"easy": 0.8, "medium": 1.0, "hard": 1.3, "mixed": 1.0}
     weight = diff_weights.get(difficulty.lower(), 1.0)
     adjusted_performance = min(1.0, accuracy * weight)
 
-    # Initial probability vector v0 based on chapter mastery
+    # Initial state vector v0
     v0 = np.array([max(0.0, 1.0 - current_mastery), current_mastery * 0.5, current_mastery * 0.5])
     v0 = v0 / np.sum(v0)
 
-    # Transition probability matrix (P) based on test performance
+    # Transition probability matrix (P)
     if adjusted_performance >= 0.75:
         P = np.array([[0.1, 0.3, 0.6], [0.05, 0.25, 0.70], [0.0, 0.1, 0.9]])
     elif adjusted_performance >= 0.4:
@@ -61,7 +59,7 @@ def calculate_markov_standings(completed: int, total_requested: int, difficulty:
     else:
         P = np.array([[0.7, 0.2, 0.1], [0.40, 0.50, 0.10], [0.20, 0.50, 0.30]])
 
-    # 3-step forecast matrix multiplication
+    # 3-step Markov chain state transition projection
     v_future = v0 @ np.linalg.matrix_power(P, 3)
     states = ["Confused", "Practicing", "Mastered"]
     current_state = states[int(np.argmax(v_future))]
@@ -187,7 +185,7 @@ def weighting_tab(chapters):
 
 
 # ---------------------------------------------------------------------
-# CHECK-IN TAB (MODIFIED)
+# CHECK-IN TAB (MAX 100 QUESTIONS SUPPORT)
 # ---------------------------------------------------------------------
 def checkin_tab(chapters):
     chapter_by_id = {c["id"]: c for c in chapters}
@@ -206,12 +204,9 @@ def checkin_tab(chapters):
 
     with col_topic:
         current_idx = ids.index(st.session_state.checkin_chapter_id)
-        selected_name = st.selectbox(
-            "Chapter", names, index=current_idx, key="checkin_chapter_select"
-        )
+        selected_name = st.selectbox("Chapter", names, index=current_idx, key="checkin_chapter_select")
         selected_id = ids[names.index(selected_name)]
 
-    # Filter questions by topic & difficulty level
     all_questions = QUESTION_BANK.get(selected_id, [])
 
     with col_diff:
@@ -228,15 +223,12 @@ def checkin_tab(chapters):
 
     available_total = min(len(filtered_questions), 100)
 
-    # Determine realistic quantity
-    realistic_recommendation = max(1, min(15, math.ceil(available_total * 0.3))) if available_total > 0 else 1
-
     with col_count:
         num_questions = st.number_input(
-            f"No. of Questions (Max {available_total})",
+            f"No. of Questions (Max 100)",
             min_value=1 if available_total > 0 else 0,
             max_value=max(1, available_total),
-            value=min(realistic_recommendation, available_total) if available_total > 0 else 0,
+            value=min(10, available_total) if available_total > 0 else 0,
             step=1,
             key="checkin_num_questions",
         )
@@ -250,7 +242,7 @@ def checkin_tab(chapters):
     c = chapter_by_id[selected_id]
     hue = CHAPTER_HUES[ids.index(selected_id) % len(CHAPTER_HUES)]
     chapter_dot_label(
-        c["name"], hue, suffix=f" · {available_total} available for {difficulty_filter} difficulty"
+        c["name"], hue, suffix=f" · {available_total} available questions for {difficulty_filter} difficulty"
     )
 
     if available_total == 0:
@@ -265,12 +257,12 @@ def checkin_tab(chapters):
             st.session_state.quiz_answers = {}
             st.rerun()
 
-    for q in active_questions:
+    for idx, q in enumerate(active_questions):
         qid = q["id"]
         with st.container():
             st.markdown(
                 f"<div style='font-family:{FONT_BODY}; font-size:13.5px; margin-bottom:6px; color:{COLORS['ink']};'>"
-                f"<strong>[{q.get('difficulty', 'medium').capitalize()}]</strong> {q['question']}</div>",
+                f"<strong>Q{idx+1} [{q.get('difficulty', 'medium').capitalize()}]</strong> {q['question']}</div>",
                 unsafe_allow_html=True,
             )
             selected = st.radio(
@@ -306,7 +298,6 @@ def checkin_tab(chapters):
             1 for q in active_questions if st.session_state.quiz_answers.get(q["id"]) == q["correct_index"]
         )
 
-        # Real-time Markov chain standing computation
         standing_state, probs = calculate_markov_standings(
             num_correct, len(active_questions), difficulty_filter, c["mastery"]
         )
