@@ -35,7 +35,7 @@ def overview_tab(chapters):
     col1, col2 = st.columns([1.1, 1])
 
     with col1:
-        with st.container(border=True):
+        with st.container():
             eyebrow("Where you stand")
             st.markdown(
                 f"<div style='font-family:{FONT_DISPLAY}; font-size:15px; "
@@ -56,7 +56,7 @@ def overview_tab(chapters):
             )
 
     with col2:
-        with st.container(border=True):
+        with st.container():
             eyebrow("Biggest opportunity")
             st.markdown(
                 f"<div style='font-family:{FONT_DISPLAY}; font-size:20px; font-weight:600; "
@@ -73,7 +73,7 @@ def overview_tab(chapters):
                 unsafe_allow_html=True,
             )
 
-    with st.container(border=True):
+    with st.container():
         eyebrow("Chapter breakdown")
         sorted_chapters = sorted(chapters, key=lambda c: -c["weight_pct"])
         for i, c in enumerate(sorted_chapters):
@@ -100,7 +100,7 @@ def weighting_tab(chapters):
     col1, col2 = st.columns([1.1, 1])
 
     with col1:
-        with st.container(border=True):
+        with st.container():
             eyebrow("Adjust chapter weighting")
             st.markdown(
                 f"<div style='font-family:{FONT_BODY}; font-size:12.5px; "
@@ -119,7 +119,7 @@ def weighting_tab(chapters):
                 c["weight_pct"] = new_w
 
     with col2:
-        with st.container(border=True):
+        with st.container():
             eyebrow("Exam weight distribution")
             fig = go.Figure(go.Pie(
                 labels=[c["name"] for c in chapters],
@@ -151,7 +151,7 @@ def checkin_tab(chapters):
         quiz = QUIZ_BANK.get(c["id"])
         if not quiz:
             continue
-        with st.container(border=True):
+        with st.container():
             st.markdown(
                 f"<div style='font-family:{FONT_DISPLAY}; font-weight:600; font-size:14.5px; "
                 f"margin-bottom:10px;'>{c['name']}</div>",
@@ -163,7 +163,7 @@ def checkin_tab(chapters):
                 unsafe_allow_html=True,
             )
             selected = st.radio(
-                "options", quiz["options"], index=None, key=f"quiz_{c['id']}",
+                "options", quiz["options"], key=f"quiz_{c['id']}",
                 label_visibility="collapsed", horizontal=True,
                 disabled=st.session_state.quiz_submitted,
             )
@@ -194,7 +194,7 @@ def checkin_tab(chapters):
 # PLAN TAB
 # ---------------------------------------------------------------------
 def plan_tab(chapters):
-    with st.container(border=True):
+    with st.container():
         eyebrow("Study budget")
         budget = st.slider(
             "Problems you can realistically get through", 10, 200, 60, step=5,
@@ -203,7 +203,7 @@ def plan_tab(chapters):
 
     priority = sorted(chapters, key=lambda c: -(c["weight_pct"] * (1 - c["mastery"])))
 
-    with st.container(border=True):
+    with st.container():
         eyebrow("Study this, in this order")
         for i, c in enumerate(priority):
             prefix = "🔥 " if i == 0 else f"{i+1}. "
@@ -220,7 +220,7 @@ def plan_tab(chapters):
 
     # NOTE: this is a placeholder projection curve, not a real simulation.
     # Swap in a real model (e.g. expected-gain-per-problem simulation) later.
-    total_weighted_gap = sum(c["weight_pct"] * (1 - c["mastery"]) for c in priority) or 1
+    total_weighted_gap = sum(c["weight_pct"] * (1 - c["mastery") for c in priority) or 1
     steps = list(range(0, budget + 1, max(5, round(budget / 10))))
     curve_df = pd.DataFrame({
         "budget": steps,
@@ -237,7 +237,7 @@ def plan_tab(chapters):
 
     col1, col2 = st.columns([1.3, 1])
     with col1:
-        with st.container(border=True):
+        with st.container():
             eyebrow("Projected score vs. problems solved")
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=curve_df["budget"], y=curve_df["focused"], mode="lines",
@@ -251,7 +251,7 @@ def plan_tab(chapters):
             st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        with st.container(border=True):
+        with st.container():
             eyebrow("Problems per chapter")
             fig2 = go.Figure(go.Bar(
                 x=[a["name"] for a in allocation],
