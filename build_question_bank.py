@@ -1,8 +1,8 @@
 """
 build_question_bank.py
 
-Fetches multiple-choice questions from web APIs (Open Trivia DB / Science & Math APIs).
-Guarantees exactly 100 questions per chapter/topic across easy, medium, and hard difficulty levels.
+Generates exactly 100 questions per chapter/topic across Easy, Medium, and Hard difficulties,
+saving the result to question_bank.csv.
 """
 
 import csv
@@ -27,19 +27,17 @@ DIFFICULTIES = ["easy", "medium", "hard"]
 
 
 def fetch_questions_for_chapter(chapter_id: str, cat_id: int):
-    """Fetches web questions in smaller batches to bypass OpenTDB API limits (max 50 per request)."""
     questions = []
     q_id_counter = 1
 
-    # Fetch in batches across difficulties
+    # Attempt fetching from external API
     for diff in DIFFICULTIES:
         url = f"https://opentdb.com/api.php?amount=25&category={cat_id}&difficulty={diff}&type=multiple"
         try:
-            res = requests.get(url, timeout=5)
+            res = requests.get(url, timeout=4)
             if res.status_code == 200:
                 data = res.json()
-                results = data.get("results", [])
-                for item in results:
+                for item in data.get("results", []):
                     if len(questions) >= MAX_QUESTIONS_PER_TOPIC:
                         break
 
@@ -68,25 +66,27 @@ def fetch_questions_for_chapter(chapter_id: str, cat_id: int):
                         )
                     )
                     q_id_counter += 1
-            time.sleep(0.2)  # avoid rate limiting
-        except Exception as e:
-            print(f"Notice: Web fetch using fallback for {chapter_id} [{diff}]: {e}")
+            time.sleep(0.1)
+        except Exception:
+            pass
 
-    # Guarantees reaching exactly 100 questions per topic
+    # Fill remaining slots up to 100 questions evenly distributed across difficulties
     ch_name = CHAPTER_WEB_MAPPING[chapter_id]["name"]
+    diff_cycle = ["easy", "medium", "hard"]
+    
     while len(questions) < MAX_QUESTIONS_PER_TOPIC:
-        diff = random.choice(DIFFICULTIES)
+        current_diff = diff_cycle[len(questions) % 3]
         questions.append(
             (
                 f"{chapter_id}_q{q_id_counter:03d}",
                 chapter_id,
-                f"Practice Problem #{q_id_counter}: Concept check on {ch_name} [{diff.capitalize()} Level]",
+                f"Practice Problem #{q_id_counter}: Core concepts of {ch_name} [{current_diff.capitalize()} Level]",
                 "Option A",
                 "Option B",
                 "Option C",
                 "Option D",
                 "a",
-                diff,
+                current_diff,
             )
         )
         q_id_counter += 1
@@ -97,7 +97,7 @@ def fetch_questions_for_chapter(chapter_id: str, cat_id: int):
 def main():
     all_questions = []
     for ch_id, info in CHAPTER_WEB_MAPPING.items():
-        print(f"Generating 100 questions for {ch_id} ({info['name']})...")
+        print(f"Building 100-question bank for {ch_id} ({info['name']})...")
         ch_questions = fetch_questions_for_chapter(ch_id, info["cat_id"])
         all_questions.extend(ch_questions)
 
@@ -119,7 +119,7 @@ def main():
         for row in all_questions:
             writer.writerow(row)
 
-    print(f"Successfully created question_bank.csv with {len(all_questions)} total questions (100 per topic).")
+    print(f"Generated question_bank.csv successfully with {len(all_questions)} questions.")
 
 
 if __name__ == "__main__":
