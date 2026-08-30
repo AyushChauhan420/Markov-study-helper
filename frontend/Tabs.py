@@ -22,7 +22,13 @@ from Components import (
     status_pill,
 )
 from Theme import CHAPTER_HUES, COLORS, FONT_BODY, FONT_DISPLAY, FONT_MONO, bucket_of
-from api_client import fetch_adaptive_questions, fetch_plan, submit_answers
+from api_client import (
+    fetch_adaptive_questions,
+    fetch_plan,
+    generate_diagnostic,
+    submit_answers,
+    submit_diagnostic,
+)
 
 SOURCE_LABEL = "AP Calculus AB · official unit weighting"
 
@@ -394,7 +400,7 @@ def plan_tab(chapters):
             "Problems you can realistically get through", 10, 200, 60, step=5, key="study_budget"
         )
 
-    plan_rows = fetch_plan(student_id, budget)
+    plan_rows = fetch_plan(student_id, st.session_state.exam_id, budget)
 
     with st.container(border=True):
         eyebrow("Study this, in this order")
@@ -472,3 +478,135 @@ def plan_tab(chapters):
                 yaxis=dict(gridcolor=COLORS["paper_line"]),
             )
             st.plotly_chart(fig2, use_container_width=True)
+
+
+# ---------------------------------------------------------------------
+# DIAGNOSTIC TAB — upload your own notes/question bank/material and
+# get a test generated strictly from what's in it. Doesn't touch the
+# regular chapter question bank or mastery at all; it's its own
+# self-contained loop: upload -> generate -> answer -> grade -> concept
+# breakdown, backed by backend/main.py's /diagnostic/* endpoints.
+# ---------------------------------------------------------------------
+def diagnostic_tab():
+    student_id = st.session_state.student_id
+
+    st.session_state.setdefault("diagnostic_set", None)
+    st.session_state.setdefault("diagnostic_answers", {})
+    st.session_state.setdefault("diagnostic_submitted", False)
+    st.session_state.setdefault("diagnostic_result", None)
+
+    with st.container(border=True):
+        eyebrow("Upload your own material")
+        st.markdown(
+            f"<div style='font-family:{FONT_BODY}; font-size:13.5px; color:{COLORS['ink_muted']}; "
+            f"margin-bottom:10px;'>Upload notes, a question bank, or any study material "
+            f"(PDF, TXT, or DOCX) and get a diagnostic test generated strictly from what's "
+            f"in it — not from the regular chapter question bank.</div>",
+            unsafe_allow_html=True,
+        )
+        uploaded = st.file_uploader("File", type=["pdf", "txt", "docx"], label_visibility="collapsed")
+        count = st.slider("Number of questions", 3, 20, 8, key="diagnostic_count")
+        generate_clicked = st.button(
+            "🩺 Generate diagnostic test", type="primary", disabled=uploaded is None
+        )
+
+    if generate_clicked and uploaded is not None:
+        with st.spinner("Reading your file and writing questions from it…"):
+            try:
+                result = generate_diagnostic(student_id, uploaded, int(count))
+            except Exception as e:  # surface backend/AI errors verbatim to the student
+                st.error(f"Couldn't generate a diagnostic from that file: {e}")
+            else:
+                st.session_state.diagnostic_set = result
+                st.session_state.diagnostic_answers = {}
+                st.session_state.diagnostic_submitted = False
+                st.session_state.diagnostic_result = None
+                st.rerun()
+
+    active = st.session_state.diagnostic_set
+    if not active:
+        return
+
+    st.divider()
+    eyebrow(f"Diagnostic — {active['source_name']}")
+
+    if st.session_state.diagnostic_submitted:
+        if st.button("↺ Upload a different file"):
+            st.session_state.diagnostic_set = None
+            st.session_state.diagnostic_answers = {}
+            st.session_state.diagnostic_submitted = False
+            st.session_state.diagnostic_result = None
+            st.rerun()
+
+    for idx, q in enumerate(active["questions"]):
+        qid = q["id"]
+        with st.container(border=True):
+            st.markdown(
+                f"<div style='font-family:{FONT_BODY}; font-size:13.5px; margin-bottom:6px; color:{COLORS['ink']};'>"
+                f"<strong>Q{idx+1} [{q.get('concept', 'General')}]</strong> {q['question']}</div>",
+                unsafe_allow_html=True,
+            )
+            selected = st.radio(
+                "options",
+                q["options"],
+                key=f"diag_{qid}",
+                label_visibility="collapsed",
+                horizontal=True,
+                disabled=st.session_state.diagnostic_submitted,
+            )
+            if selected is not None:
+                st.session_state.diagnostic_answers[qid] = q["options"].index(selected)
+
+            if st.session_state.diagnostic_submitted and st.session_state.diagnostic_result:
+                result = next(
+                    (r for r in st.session_state.diagnostic_result["per_question"] if r["question_id"] == qid),
+                    None,
+                )
+                if result:
+                    mark_color = COLORS["mint"] if result["correct"] else COLORS["coral"]
+                    mark = (
+                        "✓ Correct"
+                        if result["correct"]
+                        else f"✗ Correct answer: {q['options'][result['correct_index']]}"
+                    )
+                    st.markdown(
+                        f"<div style='font-family:{FONT_MONO}; font-size:12px; color:{mark_color};'>{mark}</div>",
+                        unsafe_allow_html=True,
+                    )
+
+    if not st.session_state.diagnostic_submitted:
+        if st.button("Check my answers →", type="primary", key="diagnostic_submit_btn"):
+            answers = [
+                {"question_id": q["id"], "selected_index": st.session_state.diagnostic_answers.get(q["id"], -1)}
+                for q in active["questions"]
+            ]
+            result = submit_diagnostic(active["set_id"], student_id, answers)
+            st.session_state.diagnostic_result = result
+            st.session_state.diagnostic_submitted = True
+            st.rerun()
+    else:
+        result = st.session_state.diagnostic_result
+        st.divider()
+        eyebrow("Results by concept")
+        st.metric("Score", f"{result['num_correct']}/{result['total']}")
+
+        concepts = list(result["concept_breakdown"].keys())
+        accuracy = [
+            100 * result["concept_breakdown"][c]["correct"] / result["concept_breakdown"][c]["total"]
+            for c in concepts
+        ]
+        bar_colors = [
+            COLORS["mint"] if a >= 70 else COLORS["amber"] if a >= 40 else COLORS["coral"] for a in accuracy
+        ]
+        fig = go.Figure(
+            go.Bar(
+                x=accuracy,
+                y=concepts,
+                orientation="h",
+                marker=dict(color=bar_colors),
+                text=[f"{a:.0f}%" for a in accuracy],
+                textposition="auto",
+            )
+        )
+        fig.update_layout(**_plotly_base_layout(max(200, 40 * len(concepts))), xaxis=dict(range=[0, 100]))
+        st.plotly_chart(fig, use_container_width=True)

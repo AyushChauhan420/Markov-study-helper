@@ -3,9 +3,17 @@ import streamlit as st
 
 import Theme
 from Theme import COLORS, FONT_MONO, DEFAULT_PALETTE, PALETTES
-from Tabs import home_tab, overview_tab, chapters_tab, weighting_tab, checkin_tab, plan_tab
+from Tabs import (
+    home_tab,
+    overview_tab,
+    chapters_tab,
+    weighting_tab,
+    checkin_tab,
+    diagnostic_tab,
+    plan_tab,
+)
 from Components import brand_logo
-from api_client import get_or_create_student, fetch_chapters, API_BASE
+from api_client import get_or_create_student, fetch_chapters, fetch_exams, select_exam, API_BASE
 
 st.set_page_config(page_title="Study Planner", page_icon="📓", layout="wide")
 
@@ -71,12 +79,20 @@ st.markdown(
 )
 
 
+def load_exams():
+    st.session_state.exams = fetch_exams()
+    if "exam_id" not in st.session_state and st.session_state.exams:
+        st.session_state.exam_id = st.session_state.exams[0]["id"]
+
+
 def load_chapters():
     student_id = get_or_create_student()
-    st.session_state.chapters = fetch_chapters(student_id)
+    st.session_state.chapters = fetch_chapters(student_id, st.session_state.exam_id)
 
 
 try:
+    if "exams" not in st.session_state:
+        load_exams()
     if "chapters" not in st.session_state:
         load_chapters()
 except requests.exceptions.ConnectionError:
@@ -94,6 +110,8 @@ def reset_all():
         st.session_state.pop(key, None)
     st.session_state.pop("checkin_chapter_select", None)
     st.session_state.pop("student_id", None)  # fresh guest -> fresh mastery
+    for key in ("diagnostic_set", "diagnostic_answers", "diagnostic_submitted", "diagnostic_result"):
+        st.session_state.pop(key, None)
     load_chapters()
     st.session_state.checkin_chapter_id = st.session_state.chapters[0]["id"]
 
@@ -107,10 +125,50 @@ def apply_palette_choice():
 # top of the page already acts as the "menu button" that opens/closes
 # this panel.
 # ---------------------------------------------------------------------
-NAV_ITEMS = ["Home", "Overview", "Chapters", "Weighting", "Practice", "Plan"]
+NAV_ITEMS = ["Home", "Overview", "Chapters", "Weighting", "Practice", "Diagnostic", "Plan"]
 
 with st.sidebar:
     brand_logo()
+
+    # ---------------------------------------------------------------
+    # Exam switcher (Feature 1). Picking a known exam just re-filters
+    # chapters by exam_id; typing a new one hits POST /exams, which
+    # triggers the AI Fetcher to generate a syllabus + starter question
+    # bank for it before it shows up here.
+    # ---------------------------------------------------------------
+    exams = st.session_state.get("exams", [])
+    current_exam = next((e for e in exams if e["id"] == st.session_state.get("exam_id")), None)
+    with st.expander(f"📘 {current_exam['name'] if current_exam else 'Choose exam'}", expanded=False):
+        if exams:
+            exam_names = [e["name"] for e in exams]
+            picked_name = st.selectbox(
+                "Switch exam",
+                exam_names,
+                index=exam_names.index(current_exam["name"]) if current_exam else 0,
+                key="exam_switch_select",
+            )
+            picked_exam = next(e for e in exams if e["name"] == picked_name)
+            if picked_exam["id"] != st.session_state.exam_id:
+                st.session_state.exam_id = picked_exam["id"]
+                load_chapters()
+                st.rerun()
+
+        st.caption("Prepping for something else? Add any exam by name.")
+        new_exam_name = st.text_input(
+            "Exam name", placeholder="e.g. JEE Main, BITSAT, UPSC", key="new_exam_name"
+        )
+        if st.button("＋ Load this exam", use_container_width=True) and new_exam_name.strip():
+            with st.spinner(f"Setting up {new_exam_name}… fetching syllabus and seeding questions"):
+                try:
+                    exam = select_exam(new_exam_name.strip())
+                except requests.exceptions.HTTPError as e:
+                    st.error(f"Couldn't set up that exam: {e}")
+                else:
+                    st.session_state.exams = fetch_exams()
+                    st.session_state.exam_id = exam["id"]
+                    load_chapters()
+                    st.rerun()
+
     st.markdown(
         f"<div style='font-family:{FONT_MONO}; font-size:10.5px; color:{COLORS['ink_muted']}; "
         f"letter-spacing:0.1em; text-transform:uppercase; margin:2px 0 14px;'>Menu</div>",
@@ -182,5 +240,7 @@ elif page == "Weighting":
     weighting_tab(st.session_state.chapters)
 elif page == "Practice":
     checkin_tab(st.session_state.chapters)
+elif page == "Diagnostic":
+    diagnostic_tab()
 elif page == "Plan":
     plan_tab(st.session_state.chapters)
