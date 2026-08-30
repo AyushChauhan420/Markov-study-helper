@@ -14,10 +14,8 @@ This addresses the organizer feedback directly:
 Streamlit (frontend/)  --HTTP-->  FastAPI (backend/)  --supabase-py-->  Supabase Postgres
 ```
 
-- **frontend/** — same Streamlit UI as before, but `Data.py` is gone. `api_client.py` is the
-  only thing that talks to the backend; `App.py`/`Tabs.py` render whatever it returns.
-- **backend/** — FastAPI app. `engine.py` holds the Markov chain + adaptive selection logic
-  (moved out of `Tabs.py`, where it used to run client-side against `st.session_state`).
+- **frontend/** — Streamlit UI , only thing that talks to the backend is; `App.py`/`Tabs.py` 
+- **backend/** — FastAPI app. `engine.py` holds the Markov chain + adaptive selection logic,
   `database.py` is the Supabase client. `main.py` wires it all into endpoints.
 - **Supabase** — `schema.sql` creates 5 tables: `chapters`, `questions`, `students`,
   `student_mastery` (the live BKT/Markov state per student per chapter), `attempts` (full
