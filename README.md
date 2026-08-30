@@ -1,4 +1,4 @@
-# Study Planner — now with a real backend + database
+# Study Planner
 
 This addresses the organizer feedback directly:
 
