@@ -64,3 +64,52 @@ class PlanChapter(BaseModel):
     weight_pct: float
     mastery: float
     problems: int
+
+
+# ---------------------------------------------------------------------
+# Exams (Feature 1: exam switcher)
+# ---------------------------------------------------------------------
+class Exam(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    source: str  # 'seed' | 'ai-generated'
+
+
+class ExamSelectIn(BaseModel):
+    name: str = Field(..., max_length=120)
+
+
+# ---------------------------------------------------------------------
+# Diagnostic tests from uploaded material (Feature 2)
+# ---------------------------------------------------------------------
+class DiagnosticQuestion(BaseModel):
+    id: str
+    concept: str
+    question: str
+    options: list[str]
+    difficulty: str
+
+
+class DiagnosticSetResponse(BaseModel):
+    set_id: str
+    source_name: str
+    questions: list[DiagnosticQuestion]
+
+
+class DiagnosticAnswerIn(BaseModel):
+    question_id: str
+    selected_index: int
+
+
+class DiagnosticSubmitIn(BaseModel):
+    set_id: str
+    student_id: str
+    answers: list[DiagnosticAnswerIn]
+
+
+class DiagnosticSubmitResult(BaseModel):
+    num_correct: int
+    total: int
+    per_question: list[dict]
+    concept_breakdown: dict[str, dict]  # concept -> {"correct": n, "total": n}

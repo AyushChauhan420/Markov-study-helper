@@ -15,8 +15,24 @@ from database import get_supabase
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
+DEFAULT_EXAM_ID = "ap-calc-ab"
+
+
+def seed_exams(sb):
+    sb.table("exams").upsert(
+        {
+            "id": DEFAULT_EXAM_ID,
+            "name": "AP Calculus AB",
+            "description": "The prototype's original exam — chapters.csv / question_bank.csv.",
+            "source": "seed",
+        }
+    ).execute()
+    print(f"seeded default exam: {DEFAULT_EXAM_ID}")
+
+
 def seed_chapters(sb):
     df = pd.read_csv(os.path.join(HERE, "chapters.csv"))
+    df["exam_id"] = DEFAULT_EXAM_ID
     rows = df.to_dict(orient="records")
     sb.table("chapters").upsert(rows).execute()
     print(f"seeded {len(rows)} chapters")
@@ -48,6 +64,7 @@ def seed_questions(sb):
 
 if __name__ == "__main__":
     sb = get_supabase()
+    seed_exams(sb)
     seed_chapters(sb)
     seed_questions(sb)
     print("done.")
