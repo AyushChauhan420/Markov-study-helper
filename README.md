@@ -1,12 +1,4 @@
-# Study Planner — now with a real backend + database
-
-This addresses the organizer feedback directly:
-
-| Feedback | Fix |
-|---|---|
-| No backend, no database | FastAPI backend (`backend/`) + Supabase Postgres |
-| Questions not chosen by mastery/Markov chain, hardcoded | `backend/engine.py`: `pick_difficulty_mix()` turns current mastery + Markov state into an easy/medium/hard question mix, `select_adaptive_questions()` samples from Supabase avoiding recently-seen questions |
-| Mastery reset every page reload | Mastery + Markov state now persisted per-student in the `student_mastery` table, updated by `POST /submit` |
+# Study Planner — ByteSolve
 
 ## Architecture
 
@@ -28,13 +20,6 @@ Streamlit (frontend/)  --HTTP-->  FastAPI (backend/)  --supabase-py-->  Supabase
   `questions`, `students`, `student_mastery` (live BKT/Markov state per student per chapter),
   `attempts` (answer log, also used to avoid repeating questions), and `diagnostic_sets` /
   `diagnostic_questions` (tests generated from a student's own uploaded material).
-
-## What's new
-
-| Feature | How it works |
-|---|---|
-| **Exam switcher** | Sidebar expander lists known exams (seeded with AP Calculus AB). Typing a new exam name (e.g. "JEE Main") hits `POST /exams` — if it's not in Supabase yet, `ai_content.generate_exam_syllabus()` asks the local Ollama model for that exam's real chapter/unit breakdown + weightage, then `generate_questions()` seeds a small starter question bank per chapter/difficulty so Practice works immediately. |
-| **Diagnostic tab** | New "Diagnostic" nav item. Upload a PDF/TXT/DOCX of your own notes or a question bank; the backend extracts the text (`file_parser.py`), and `ai_content.generate_diagnostic_questions()` writes MCQs grounded strictly in that material (each tagged with the concept it tests), stores them in `diagnostic_sets`/`diagnostic_questions`, and grades your answers with a per-concept accuracy breakdown — completely separate from the regular chapter question bank. |
 
 ## Setup
 
@@ -91,10 +76,3 @@ export STUDY_PLANNER_API=https://your-deployed-backend.example.com
    new score into mastery, and **upserts** `student_mastery` — this is what makes progress
    persist instead of vanishing on refresh.
 7. `GET /plan` reads that same live mastery to prioritize chapters and allocate a study budget.
-
-## What's unchanged from the prototype
-
-`Theme.py` and `Components.py` (visual styling / small UI helpers) are untouched. The 3-state
-Markov transition matrices are the exact ones from the original prototype's
-`calculate_markov_standings()` — they just moved to `backend/engine.py` and now read/write real
-state instead of a session variable that reset on every reload.
